@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gannu Employee Portal</title>
+    <style>
+        table { border-collapse: collapse; width: 80%; margin: 20px auto; }
+        th, td { border: 1px solid pink; padding: 8px; text-align: left; }
+        th { background-color: red; color: white; }
+        input, button { padding: 5px; margin: 5px; }
+        #employeeForm { text-align: center; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h2 style="text-align:center;">Gannu Employee Portal</h2>
+
+    <div id="employeeForm">
+        <input type="text" id="name" placeholder="Name">
+        <input type="number" id="age" placeholder="Age">
+        <input type="email" id="email" placeholder="Email">
+        <input type="text" id="phone" placeholder="Phone">
+        <input type="text" id="department" placeholder="Department">
+        <button id="submitBtn" onclick="addEmployee()">Add Employee</button>
+        <button onclick="fetchEmployees()">Refresh Table</button>
+    </div>
+
+    <table id="employeeTable">
+        <thead>
+            <tr>
+                <th>Name</th><th>Age</th><th>Email</th><th>Phone</th><th>Department</th><th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        const apiUrl = '/api/employee';
+
+        // Load all employees from API
+        async function fetchEmployees() {
+            const res = await fetch(apiUrl);
+            const data = await res.json();
+            const tbody = document.querySelector('#employeeTable tbody');
+            tbody.innerHTML = ''; // clear table before adding
+            data.forEach(emp => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${emp.name}</td>
+                    <td>${emp.age}</td>
+                    <td>${emp.email}</td>
+                    <td>${emp.phone}</td>
+                    <td>${emp.department}</td>
+                    <td>
+                        <button onclick="editEmployee(${emp.id})">Edit</button>
+                        <button onclick="deleteEmployee(${emp.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Add a new employee
+        async function addEmployee() {
+            const employee = {
+                name: document.getElementById('name').value,
+                age: parseInt(document.getElementById('age').value),
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                department: document.getElementById('department').value
+            };
+            await fetch(apiUrl, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(employee)
+            });
+
+            // Clear inputs after adding
+            document.getElementById('name').value = '';
+            document.getElementById('age').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('department').value = '';
+
+            fetchEmployees(); // refresh table
+        }
+
+        // Delete an employee
+        async function deleteEmployee(id) {
+            await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+            fetchEmployees();
+        }
+
+        // Edit an employee
+        function editEmployee(id) {
+            const row = [...document.querySelectorAll('#employeeTable tbody tr')]
+                        .find(tr => tr.querySelector('button').getAttribute('onclick').includes(id));
+            const cells = row.children;
+
+            document.getElementById('name').value = cells[0].innerText;
+            document.getElementById('age').value = cells[1].innerText;
+            document.getElementById('email').value = cells[2].innerText;
+            document.getElementById('phone').value = cells[3].innerText;
+            document.getElementById('department').value = cells[4].innerText;
+
+            const btn = document.getElementById('submitBtn');
+            btn.textContent = 'Save';
+            btn.onclick = async function() {
+                const employee = {
+                    name: document.getElementById('name').value,
+                    age: parseInt(document.getElementById('age').value),
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    department: document.getElementById('department').value
+                };
+                await fetch(`${apiUrl}/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(employee)
+                });
+
+                btn.textContent = 'Add Employee';
+                btn.onclick = addEmployee;
+
+                // Clear inputs after saving
+                document.getElementById('name').value = '';
+                document.getElementById('age').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('department').value = '';
+
+                fetchEmployees();
+            };
+        }
+
+        // Load employees on page load
+        fetchEmployees();
+    </script>
+</body>
+</html>
