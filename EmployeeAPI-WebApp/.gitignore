@@ -1,0 +1,22 @@
+# Build outputs
+/bin/
+/obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# Logs
+*.log
+
+# EF Core Migrations (optional, if you want them in repo remove this)
+Migrations/
+
+# Publish output
+*.zip
+*.publishsettings
